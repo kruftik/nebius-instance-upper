@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include ".fullname" . }}
+  labels:
+    {{- include ".labels" . | nindent 4 }}
+data:
+  drain-node.sh: {{ .Files.Get "files/drain-node.sh" | quote }}
+
+  pre-stop.sh: {{ .Files.Get "files/pre-stop.sh" | quote }}
+
+  post-start.sh: {{ .Files.Get "files/post-start.sh" | quote }}
+
+---

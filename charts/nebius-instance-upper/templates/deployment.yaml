@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include ".fullname" . }}
+  labels:
+    {{- include ".labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include ".selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include ".selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include ".serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: SERVICE_ACCOUNT_JSON
+              valueFrom:
+                secretKeyRef:
+                  key: SERVICE_ACCOUNT_JSON
+                  name: {{ include ".fullname" . }}
+            - name: DRAIN_NODE_SCRIPT
+              value: "/opt/scripts/drain-node.sh"
+            - name: PRE_STOP_SCRIPT
+              value: "/opt/scripts/pre-stop.sh"
+            - name: POST_START_SCRIPT
+              value: "/opt/scripts/post-start.sh"
+            - name: NODES_ALWAYS_DRAIN
+              value: {{ .Values.nodesAlwaysDrain | quote }}
+          volumeMounts:
+            - mountPath: /opt/scripts
+              name: scripts
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: scripts
+          configMap:
+            name: {{ include ".fullname" . }}
+            items:
+              - key: drain-node.sh
+                path: drain-node.sh
+                mode: 0750
+              - key: pre-stop.sh
+                path: pre-stop.sh
+                mode: 0750
+              - key: post-start.sh
+                path: post-start.sh
+                mode: 0750
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
