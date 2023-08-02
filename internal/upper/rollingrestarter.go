@@ -43,8 +43,18 @@ func (s *Service) runHookAndWaitForCompletion(ctx context.Context, instance *com
 		fmt.Sprintf("HOME=%s", home),
 		fmt.Sprintf("NODE_NAME=%s", instance.GetName()),
 		fmt.Sprintf("NODE_IP=%s", instance.GetNetworkInterfaces()[0].GetPrimaryV4Address().GetAddress()),
-		fmt.Sprintf("KUBECONFIG=%s", os.Getenv("KUBECONFIG")),
 	)
+
+	if kubeConfig := os.Getenv("KUBECONFIG"); kubeConfig != "" {
+		s.log.Debugf("inject KUBECONFIG='%s' into script environment", kubeConfig)
+
+		cmd.Env = append(cmd.Env, fmt.Sprintf("KUBECONFIG=%s", kubeConfig))
+	} else if os.Getenv("KUBERNETES_SERVICE_HOST") != "" && os.Getenv("KUBERNETES_SERVICE_PORT") != "" {
+		cmd.Env = append(cmd.Env,
+			fmt.Sprintf("KUBERNETES_SERVICE_HOST=%s", os.Getenv("KUBERNETES_SERVICE_HOST")),
+			fmt.Sprintf("KUBERNETES_SERVICE_PORT=%s", os.Getenv("KUBERNETES_SERVICE_PORT")),
+		)
+	}
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
