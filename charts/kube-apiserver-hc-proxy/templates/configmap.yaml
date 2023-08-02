@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include ".fullname" . }}
+  labels:
+    {{- include ".labels" . | nindent 4 }}
+data:
+  nginx.default.conf.envsh: |-
+    #!/bin/sh
+
+    BEARER_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) \
+      envsubst < /etc/nginx/conf.d/default.conf.tmpl > /etc/nginx/conf.d/default.conf
+  nginx.default.conf.tmpl: |-
+    server {
+        listen       {{ .Values.service.port }};
+        server_name  ${NODE_NAME};
+
+        location = /readyz {
+          proxy_set_header Authorization "Bearer ${BEARER_TOKEN}";
+
+          proxy_ssl_verify on;
+          proxy_ssl_trusted_certificate /var/run/secrets/kubernetes.io/serviceaccount/ca.crt;
+
+          proxy_pass https://${NODE_NAME}:6443/readyz;
+        }
+    }
