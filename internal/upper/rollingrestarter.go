@@ -168,7 +168,7 @@ func (s *Service) RestartGroup(ctx context.Context, instanceSpecsList []Instance
 	})
 
 	for _, spec := range instanceSpecsList {
-		if spec.StartedAt.Add(s.cfg.RollingRestarts.MinUpDuration).After(time.Now()) {
+		if spec.StartedAt.Add(s.cfg.RollingRestarts.MinInstanceRunningDuration).After(time.Now()) {
 			s.log.Debug("instance %s (%s) does not need to be restarted", spec.Instance.GetId(), spec.Instance.GetName())
 			continue
 		}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/yandex-cloud/go-genproto/yandex/cloud/compute/v1"
+	"math/rand"
 	"strconv"
 	"time"
 )
@@ -124,6 +125,10 @@ func (s *Service) processInstanceList(ctx context.Context, instanceList []*compu
 		err               error
 	)
 
+	timeOffsetSeconds := rand.Intn(int(s.cfg.RollingRestarts.MaxRandomOffset / time.Second))
+
+	s.log.Debugf("using %ds time offset for the iteration", timeOffsetSeconds)
+
 	for _, instance := range groupInstances {
 		log := s.log.
 			With("instanceID", instance.GetId()).
@@ -148,7 +153,10 @@ func (s *Service) processInstanceList(ctx context.Context, instanceList []*compu
 
 		log.Debugf("instance started at %s", instanceStartTime)
 
-		if instanceStartTime.Add(s.cfg.RollingRestarts.MinUpDuration).Before(time.Now()) {
+		if instanceStartTime.
+			Add(s.cfg.RollingRestarts.MinInstanceRunningDuration).
+			Add(time.Duration(timeOffsetSeconds) * time.Second).
+			Before(time.Now()) {
 			bRollingRestartIsNeeded = true
 		}
 

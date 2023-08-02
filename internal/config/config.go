@@ -9,7 +9,8 @@ import (
 )
 
 type RollingRestartsConfig struct {
-	MinUpDuration time.Duration
+	MinInstanceRunningDuration time.Duration `long:"min-instance-running-duration" env:"MIN_INSTANCE_RUNNING_DURATION" default:"22h"`
+	MaxRandomOffset            time.Duration `long:"max-random-instance-running-duration-offset" env:"MAX_INSTANCE_RUNNING_DURATION_OFFSET" default:"90m"`
 }
 
 type AppConfig struct {
@@ -54,10 +55,6 @@ func ParseConfig() (AppConfig, error) {
 		}
 	} else {
 		cfg.IAMServiceAccountKey = []byte(saJSONString)
-	}
-
-	cfg.RollingRestarts = RollingRestartsConfig{
-		MinUpDuration: 12 * time.Hour,
 	}
 
 	if _, err = os.Stat(cfg.PreStopScript); err != nil {
