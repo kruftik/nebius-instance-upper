@@ -8,7 +8,7 @@ image:
   repository: kruft/nebius-instance-upper
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "202308020904"
+  tag: "202308020925"
 
 imagePullSecrets: []
 nameOverride: ""
