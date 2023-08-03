@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/kruftik/nebius-instance-upper/internal/config"
+	"github.com/kruftik/nebius-instance-upper/internal/logging"
 	"github.com/kruftik/nebius-instance-upper/internal/upper"
 	ycsdk "github.com/yandex-cloud/go-sdk"
-	"go.uber.org/zap"
 	"os"
 	"os/signal"
 	"syscall"
@@ -25,15 +25,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger, err := zap.NewDevelopment()
+	logger, err := logging.NewLogger(cfg)
 	if err != nil {
 		fmt.Printf("cannot init logger: %+v", err)
 		os.Exit(1)
 	}
 
 	log := logger.Sugar()
-
-	log.Debug("logger initialized")
 
 	log.Info("nebius-instance-upper starting")
 	defer log.Debug("nebius-instance-upper completed")
@@ -46,7 +44,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Infof("folder ID found: %s", cfg.FolderID)
+	log.Debugf("folder ID found: %s", cfg.FolderID)
 
 	csdk, err := ycsdk.Build(ctx, ycsdk.Config{
 		Credentials: creds,
@@ -56,7 +54,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Info("nebius cloud sdk initialized")
+	log.Debug("nebius cloud sdk initialized")
 
 	go func() {
 		<-parentCtx.Done()

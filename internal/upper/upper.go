@@ -41,12 +41,12 @@ func NewUpperService(_ context.Context, cfg config.AppConfig, log *zap.SugaredLo
 
 func (s *Service) Process(ctx context.Context) error {
 	if s.isRestartProgressing() {
-		s.log.Info("skip iteration: rolling restart in progress")
+		s.log.Warn("skip iteration: rolling restart in progress")
 		return nil
 	}
 
 	s.log.Info("running process-instances iteration")
-	defer s.log.Info("process-instances iteration completed")
+	defer s.log.Debug("process-instances iteration completed")
 
 	instanceList, err := s.listFolderInstances(ctx)
 	if err != nil {

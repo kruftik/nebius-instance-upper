@@ -28,8 +28,6 @@ type AppConfig struct {
 
 	AlwaysDrain bool `long:"always-drain-nodes" env:"NODES_ALWAYS_DRAIN"`
 
-	LogLevel int `short:"v" long:"v" env:"LOG_LEVEL"`
-
 	NodeName string `long:"node-name" env:"NODE_NAME"`
 
 	RollingRestarts RollingRestartsConfig
